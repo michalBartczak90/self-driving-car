@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "target": "ES2021",
+    "moduleResolution": "Node",
+    "paths": {
+      "~*": ["./*"]
+    }
+  }
+}

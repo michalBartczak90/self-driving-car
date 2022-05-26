@@ -1,0 +1,11 @@
+@import 'normalize.css';
+
+body {
+  background: darkgrey;
+  text-align: center;
+}
+
+#myCanvas {
+  background: lightgray;
+  height: 100vh;
+}
