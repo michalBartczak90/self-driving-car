@@ -4,6 +4,7 @@ export interface Point {
 }
 
 export type Segment = [Point, Point];
+export type Polygon = Point[];
 
 export interface Intersection extends Point {
   offset: number;

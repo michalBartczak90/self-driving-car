@@ -1,38 +1,44 @@
-import { Controls } from './controls';
+import { Controls, ControlType } from './controls';
 import { Sensor } from './sensor';
-import { Point, Segment } from './models';
+import { Polygon, Segment } from './models';
 import { polysIntersection } from '~src/utils';
 
 export class Car {
-  private sensor: Sensor = new Sensor(this);
-  private controls: Controls = new Controls();
-  private polygon: Point[] = [];
+  private sensor: Sensor | undefined = undefined;
+  private controls: Controls;
   private speed = 0;
-  private maxSpeed = 3;
   private acceleration = 0.2;
   private friction = 0.05;
   angle = 0;
+  polygon: Polygon = [];
   damaged = false;
 
   constructor(
     public x: number,
     public y: number,
     private width: number,
-    private height: number
-  ) {}
+    private height: number,
+    private controlType: ControlType,
+    private maxSpeed = 3
+  ) {
+    this.controls = new Controls(controlType);
+    if (controlType === ControlType.Keys) {
+      this.sensor = new Sensor(this);
+    }
+  }
 
-  update(roadBoarders: Segment[]) {
+  update(roadBoarders: Segment[], traffic: Car[]) {
     if (!this.damaged) {
       this.move();
       this.polygon = this.createPolygon();
-      this.damaged = this.assessDamaged(roadBoarders);
+      this.damaged = this.assessDamaged(roadBoarders, traffic);
     }
 
-    this.sensor.update(roadBoarders);
+    this.sensor?.update(roadBoarders, traffic);
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = this.damaged ? 'gray' : 'black';
+  draw(ctx: CanvasRenderingContext2D, color: string) {
+    ctx.fillStyle = this.damaged ? 'gray' : color;
 
     ctx.beginPath();
     const [firstPoint, ...polygonPoints] = this.polygon;
@@ -41,12 +47,15 @@ export class Car {
     polygonPoints.forEach(({ x, y }) => ctx.lineTo(x, y));
     ctx.fill();
 
-    this.sensor.draw(ctx);
+    this.sensor?.draw(ctx);
   }
 
-  private assessDamaged(roadBoarders: Segment[]): boolean {
-    for (let roadBoarder of roadBoarders) {
-      if (polysIntersection(this.polygon, roadBoarder)) {
+  private assessDamaged(roadBoarders: Segment[], traffic: Car[]): boolean {
+    for (let obstacle of [
+      ...roadBoarders,
+      ...traffic.map((car) => car.polygon),
+    ]) {
+      if (polysIntersection(this.polygon, obstacle)) {
         return true;
       }
     }
@@ -57,7 +66,7 @@ export class Car {
    * return Car corners points
    * @private
    */
-  private createPolygon(): Point[] {
+  private createPolygon(): Polygon {
     const rad = Math.hypot(this.width, this.height) / 2;
     const alpha = Math.atan2(this.width, this.height);
 

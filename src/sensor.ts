@@ -1,5 +1,5 @@
 import { Car } from './car';
-import { lineIntersection, lerp } from './utils';
+import { lineIntersection, lerp, isSet } from './utils';
 import { Intersection, Point, Segment } from './models';
 
 export class Sensor {
@@ -11,12 +11,12 @@ export class Sensor {
 
   constructor(private car: Car) {}
 
-  update(roadBoarders: Segment[]) {
+  update(roadBoarders: Segment[], traffic: Car[]) {
     this.castRays();
     this.readings = [];
 
     for (const ray of this.rays) {
-      this.readings.push(this.getReading(ray, roadBoarders));
+      this.readings.push(this.getReading(ray, roadBoarders, traffic));
     }
   }
 
@@ -66,22 +66,24 @@ export class Sensor {
 
   private getReading(
     ray: Segment,
-    roadBoarders: Segment[]
+    roadBoarders: Segment[],
+    traffic: Car[]
   ): Intersection | undefined {
-    let touches: (Intersection | undefined)[] = [];
+    const roadTouches = roadBoarders
+      .map(([x, y]) => lineIntersection(ray[0], ray[1], x, y))
+      .filter(isSet);
 
-    for (let i = 0; i < roadBoarders.length; i++) {
-      const touch = lineIntersection(
-        ray[0],
-        ray[1],
-        roadBoarders[i][0],
-        roadBoarders[i][1]
-      );
+    const trafficTouches = traffic
+      .flatMap((trafficCar) =>
+        trafficCar.polygon.map((point, idx, polygons) => {
+          const nextPoint = polygons[(idx + 1) % polygons.length];
+          return lineIntersection(ray[0], ray[1], point, nextPoint);
+        })
+      )
+      .filter(isSet);
 
-      if (touch) {
-        touches.push(touch);
-      }
-    }
+    const touches = roadTouches.concat(trafficTouches);
+
     if (touches.length === 0) {
       return undefined;
     }

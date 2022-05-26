@@ -1,4 +1,4 @@
-import { Intersection, Point } from '../models';
+import { Intersection, Point, Polygon } from '../models';
 import { lerp } from './interpolation';
 
 /**
@@ -33,7 +33,7 @@ export function lineIntersection(
   return undefined;
 }
 
-export function polysIntersection(poly1: Point[], poly2: Point[]) {
+export function polysIntersection(poly1: Polygon, poly2: Polygon) {
   for (let i = 0; i < poly1.length; i++) {
     for (let j = 0; j < poly2.length; j++) {
       const touch = lineIntersection(
