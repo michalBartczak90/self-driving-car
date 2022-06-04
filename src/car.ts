@@ -7,14 +7,14 @@ import { NeuralNetwork } from './neural-network';
 export class Car {
   private sensor: Sensor | undefined = undefined;
   private controls: Controls;
-  private brain: NeuralNetwork | undefined = undefined;
+  public brain: NeuralNetwork | undefined = undefined;
   private speed = 0;
   private acceleration = 0.2;
   private friction = 0.05;
   angle = 0;
   polygon: Polygon = [];
   damaged = false;
- useBrain: boolean;
+  useBrain: boolean;
 
   constructor(
     public x: number,
@@ -26,7 +26,6 @@ export class Car {
   ) {
     this.useBrain = this.controlType === ControlType.AI;
     this.controls = new Controls(controlType);
-
 
     if (controlType !== ControlType.Dummy) {
       this.sensor = new Sensor(this);
@@ -44,20 +43,21 @@ export class Car {
     if (this.sensor) {
       this.sensor.update(roadBoarders, traffic);
 
-      if(this.useBrain) {
-        const offsets = this.sensor.readings.map((s) => (!s ? 0 : 1 - s.offset));
+      if (this.useBrain) {
+        const offsets = this.sensor.readings.map((s) =>
+          !s ? 0 : 1 - s.offset
+        );
         const outputs = NeuralNetwork.feedForward(offsets, this.brain);
 
         this.controls.forward = !!outputs[0];
         this.controls.left = !!outputs[1];
         this.controls.right = !!outputs[2];
         this.controls.reverse = !!outputs[3];
-
       }
     }
   }
 
-  draw(ctx: CanvasRenderingContext2D, color: string) {
+  draw(ctx: CanvasRenderingContext2D, color: string, drawSensors = false) {
     ctx.fillStyle = this.damaged ? 'gray' : color;
 
     ctx.beginPath();
@@ -67,7 +67,9 @@ export class Car {
     polygonPoints.forEach(({ x, y }) => ctx.lineTo(x, y));
     ctx.fill();
 
-    this.sensor?.draw(ctx);
+    if (drawSensors && this.sensor) {
+      this.sensor.draw(ctx);
+    }
   }
 
   private assessDamaged(roadBoarders: Segment[], traffic: Car[]): boolean {
