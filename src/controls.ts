@@ -1,6 +1,7 @@
 export enum ControlType {
   Dummy = 'dummy',
   Keys = 'keys',
+  AI = 'AI'
 }
 
 export class Controls {

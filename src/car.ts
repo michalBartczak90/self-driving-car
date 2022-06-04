@@ -1,17 +1,20 @@
 import { Controls, ControlType } from './controls';
 import { Sensor } from './sensor';
 import { Polygon, Segment } from './models';
-import { polysIntersection } from '~src/utils';
+import { polysIntersection } from './utils';
+import { NeuralNetwork } from './neural-network';
 
 export class Car {
   private sensor: Sensor | undefined = undefined;
   private controls: Controls;
+  private brain: NeuralNetwork | undefined = undefined;
   private speed = 0;
   private acceleration = 0.2;
   private friction = 0.05;
   angle = 0;
   polygon: Polygon = [];
   damaged = false;
+ useBrain: boolean;
 
   constructor(
     public x: number,
@@ -21,9 +24,13 @@ export class Car {
     private controlType: ControlType,
     private maxSpeed = 3
   ) {
+    this.useBrain = this.controlType === ControlType.AI;
     this.controls = new Controls(controlType);
-    if (controlType === ControlType.Keys) {
+
+
+    if (controlType !== ControlType.Dummy) {
       this.sensor = new Sensor(this);
+      this.brain = new NeuralNetwork([this.sensor.rayCount, 6, 4]);
     }
   }
 
@@ -34,7 +41,20 @@ export class Car {
       this.damaged = this.assessDamaged(roadBoarders, traffic);
     }
 
-    this.sensor?.update(roadBoarders, traffic);
+    if (this.sensor) {
+      this.sensor.update(roadBoarders, traffic);
+
+      if(this.useBrain) {
+        const offsets = this.sensor.readings.map((s) => (!s ? 0 : 1 - s.offset));
+        const outputs = NeuralNetwork.feedForward(offsets, this.brain);
+
+        this.controls.forward = !!outputs[0];
+        this.controls.left = !!outputs[1];
+        this.controls.right = !!outputs[2];
+        this.controls.reverse = !!outputs[3];
+
+      }
+    }
   }
 
   draw(ctx: CanvasRenderingContext2D, color: string) {

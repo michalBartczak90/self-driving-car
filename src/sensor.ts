@@ -3,11 +3,11 @@ import { lineIntersection, lerp, isSet } from './utils';
 import { Intersection, Point, Segment } from './models';
 
 export class Sensor {
-  private rayCount = 3;
-  private rayLength = 100;
-  private raySpread = Math.PI / 4;
+  public rayCount = 5;
+  private rayLength = 150;
+  private raySpread = Math.PI / 2
   private rays: Segment[] = [];
-  private readings = [];
+  public readings: (Intersection | undefined)[] = [];
 
   constructor(private car: Car) {}
 
