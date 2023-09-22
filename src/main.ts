@@ -1,7 +1,7 @@
 import { Car } from './car';
 import { Road } from './road';
 import { ControlType } from './controls';
-import { NetworkVisualizer } from './neural-network';
+import { NetworkVisualizer, NeuralNetwork } from './neural-network';
 
 const carCanvas: HTMLCanvasElement = document.getElementById(
   'carCanvas'
@@ -25,13 +25,22 @@ const cars = generateCars(N);
 let bestCar = cars[0];
 
 if (localStorage.getItem('bestBrain')) {
-  bestCar.brain = JSON.parse(localStorage.getItem('bestBrain'));
+  for(let i =0; i < cars.length; i++) {
+    cars[i].brain = JSON.parse(localStorage.getItem('bestBrain'));
+    if(i) {
+      NeuralNetwork.mutate(cars[i].brain, 0.1)
+    }
+  }
 }
 
 const traffic = [
   new Car(road.getLaneCenter(1), -100, 30, 50, ControlType.Dummy, 2),
-  new Car(road.getLaneCenter(0), -250, 30, 50, ControlType.Dummy, 2),
-  new Car(road.getLaneCenter(3), -500, 30, 50, ControlType.Dummy, 2),
+  new Car(road.getLaneCenter(0), -300, 30, 50, ControlType.Dummy, 2),
+  new Car(road.getLaneCenter(2), -300, 30, 50, ControlType.Dummy, 2),
+  new Car(road.getLaneCenter(0), -500, 30, 50, ControlType.Dummy, 2),
+  new Car(road.getLaneCenter(1), -500, 30, 50, ControlType.Dummy, 2),
+  new Car(road.getLaneCenter(1), -700, 30, 50, ControlType.Dummy, 2),
+  new Car(road.getLaneCenter(2), -700, 30, 50, ControlType.Dummy, 2),
 ];
 
 animate();
